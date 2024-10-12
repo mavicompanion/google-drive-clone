@@ -2,7 +2,6 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.15.0/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js';
 import { getFirestore, doc, setDoc, getDoc, collection } from 'https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js'; 
 
-// Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCGVw76Kw_sSkx9gcwRRobzx0CF4kLPVEw",
   authDomain: "drive-clone-f46ea.firebaseapp.com",
@@ -17,30 +16,23 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Get loader element
 const loader = document.getElementById('fullScreenLoader');
 
-// Function to show loader
 function showLoader() {
   loader.classList.remove('d-none');
   loader.classList.add('d-flex');
 }
 
-// Function to hide loader
 function hideLoader() {
   loader.classList.add('d-flex');
   loader.classList.add('d-none');
 }
 
-
-// Check if user is already logged in
 window.onload = () => {
   showLoader();
   onAuthStateChanged(auth, async (user) => {
     if (user) {
-      // Check and create default folder for the user
       await createDefaultFolder(user.uid);
-      // User is logged in, redirect to home page with root folder
       hideLoader();
       window.location.href = `home.html?folderId=root-${user.uid}`;
     } else {
@@ -49,7 +41,6 @@ window.onload = () => {
   });
 };
 
-// Google Sign-In
 const googleSignInBtn = document.getElementById('googleSignInBtn');
 googleSignInBtn.addEventListener('click', async (event) => {
   event.preventDefault();
@@ -59,11 +50,7 @@ googleSignInBtn.addEventListener('click', async (event) => {
   try {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
-    
-    // Check and create default folder for the user
     await createDefaultFolder(user.uid);
-    
-    // Successful sign-in, redirect to home page with root folder
     hideLoader();
     window.location.href = `home.html?folderId=root-${user.uid}`;
   } catch (error) {
@@ -73,19 +60,16 @@ googleSignInBtn.addEventListener('click', async (event) => {
   }
 });
 
-// Function to create default folder if it doesn't exist
 async function createDefaultFolder(userId) {
   const userFoldersRef = collection(db, `assets/${userId}/folders`);
   const defaultFolderId = `root-${userId}`;
   const folderDocRef = doc(userFoldersRef, defaultFolderId);
   
-  // Check if the default root folder exists
   const folderSnapshot = await getDoc(folderDocRef);
   
   if (!folderSnapshot.exists()) {
-    // Create the default root folder
     await setDoc(folderDocRef, {
-      parentFolderId: null, // Root folder has no parent
+      parentFolderId: null,
       starred: false,
       folderName: defaultFolderId,
       createdAt: new Date(),
