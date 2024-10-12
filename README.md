@@ -19,17 +19,9 @@ A **Google Drive Clone** built using **HTML**, **CSS**, **JavaScript**, and **Fi
 
 ## Demo
 
-🚀 Check out the [Live Demo](https://example.com) (replace with your actual demo link)
+🚀 Check out the [Live Demo](https://google-drive-clone-vrc.vercel.app/)(replace with your actual demo link)
 
 ---
-
-## Screenshots
-
-### Login Screen
-![Login Screen](https://via.placeholder.com/600x400.png?text=Login+Screen)
-
-### File Manager
-![File Manager](https://via.placeholder.com/600x400.png?text=File+Manager)
 
 ---
 
@@ -72,7 +64,19 @@ const auth = getAuth(app);
 const storage = getStorage(app);
 ```
 
-#To clone the repo
+# To clone the repo
 
 git clone https://github.com/yourusername/google-drive-clone.git
+
+# Project Structure
+
+📂 Google-Drive-Clone
+ ├── 📁 assets           # Static assets like images and icons
+ ├── 📁 css              # Stylesheets
+ ├── 📁 js               # JavaScript files
+ ├── 📄 firebase.js      # Firebase configuration and initialization
+ ├── 📄 index.html       # Main page for authentication
+ ├── 📄 dashboard.html   # Dashboard for file management
+ ├── 📄 README.md        # Project documentation
+
 
