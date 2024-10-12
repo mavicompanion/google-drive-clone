@@ -78,7 +78,7 @@ onAuthStateChanged(auth, async (user) => {
         hideLoader();
     } else {
         // User is signed out, redirect to login page
-        window.location.href = 'login.html';
+         window.location.href = 'index.html';
     }
 });
 
