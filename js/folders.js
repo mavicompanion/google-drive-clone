@@ -1,4 +1,3 @@
-// Your web app's Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyCGVw76Kw_sSkx9gcwRRobzx0CF4kLPVEw",
     authDomain: "drive-clone-f46ea.firebaseapp.com",
@@ -9,7 +8,6 @@ const firebaseConfig = {
     measurementId: "G-EZ1658JP7G"
 };
 
-// Initialize Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore, collection, query, where, getDocs, addDoc, doc, getDoc, deleteDoc} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -20,16 +18,13 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// Get the loader element
 const loader = document.getElementById('fullScreenLoader');
 
-// Function to show loader
 function showLoader() {
     loader.classList.remove('d-none');
     loader.classList.add('d-flex');
 }
   
-// Function to hide loader
 function hideLoader() {
     loader.classList.remove('d-flex');
     loader.classList.add('d-none');
@@ -42,42 +37,34 @@ function getFolderIdFromUrl() {
 
 let userId;
 
-// Show loader on window change
 window.addEventListener('beforeunload', showLoader);
 
-// Hide loader after window loads
 window.addEventListener('load', hideLoader);
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        userId = user.uid; // Fetch user ID
+        userId = user.uid;
 
-        // Get folderId from URL
         const folderId = getFolderIdFromUrl();
 
-        // Redirect to root folder if folderId is invalid or not provided
         if (!folderId || folderId === 'null') {
-            window.location.href = `home.html?folderId=root-${userId}`; // Redirect to the root folder
-            return; // Exit to prevent further execution
+            window.location.href = `home.html?folderId=root-${userId}`; 
+            return;
         }
 
-        // Check if the folderId exists in Firestore
         const folderRef = doc(db, `assets/${userId}/folders`, folderId);
         const folderDoc = await getDoc(folderRef);
 
         if (!folderDoc.exists()) {
-            // If folder doesn't exist, redirect to root folder
             window.location.href = `home.html?folderId=root-${userId}`;
-            return; // Exit to prevent further execution
+            return;
         }
 
-        // Load folders and files that belong to the current folderId
         showLoader();
         await loadFolders(folderId);
-        await updateFolderTitleIndicator(folderId); // Update the folder title indicator
+        await updateFolderTitleIndicator(folderId);
         hideLoader();
     } else {
-        // User is signed out, redirect to login page
         window.location.href = 'index.html';
     }
 });
@@ -88,44 +75,45 @@ async function loadFolders(parentId) {
     const foldersList = document.getElementById('foldersList');
     foldersList.innerHTML = '';
 
+    const folderRef = doc(db, `assets/${userId}/folders`, parentId);
+    const folderDoc = await getDoc(folderRef);
+
+    if (!folderDoc.exists()) {
+        window.location.href = `home.html?folderId=root-${userId}`;
+        return;
+    }
+
     const q = query(collection(db, `assets/${userId}/folders`), where("parentFolderId", "==", parentId));
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
-        hideLoader(); // Ensure loader is hidden if no folders are found
+        hideLoader(); 
         return;
     }
 
     querySnapshot.forEach((doc) => {
         const folderData = doc.data();
         
-        // Create the column div
         const colDiv = document.createElement('div');
         colDiv.classList.add('col-10', 'col-md-4', 'col-lg-3', 'mt-2');
 
-        // Create the folder-tile div
         const folderTileDiv = document.createElement('div');
         folderTileDiv.classList.add('folder-tile');
 
-        // Create the folder link
         const folderLink = document.createElement('a');
         folderLink.classList.add('folder-icon');
         folderLink.href = `home.html?folderId=${doc.id}`;
         
-        // Create the folder icon
         const folderIcon = document.createElement('i');
         folderIcon.classList.add('fas', 'fa-folder');
 
-        // Create the folder name
         const folderTitleP = document.createElement('p');
         folderTitleP.classList.add('folder-title', 'folder-title-p');
         folderTitleP.textContent = folderData.folderName;
 
-        // Append icon and title to the link
         folderLink.appendChild(folderIcon);
         folderLink.appendChild(folderTitleP);
 
-        // Create the dropdown button
         const dropdownDiv = document.createElement('div');
         dropdownDiv.classList.add('dropdown');
 
@@ -139,13 +127,11 @@ async function loadFolders(parentId) {
 
         dropdownButton.appendChild(threeDotsIcon);
 
-        // Create the dropdown menu
         const dropdownMenu = document.createElement('ul');
         dropdownMenu.classList.add('dropdown-menu', 'dropdown-menu-end', 'mt-2', 'rounded-1', 'border-0');
         dropdownMenu.setAttribute('aria-labelledby', 'dropdownMenuButton');
         dropdownMenu.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.2)';
 
-        // Dropdown items
         const actions = [
             { icon: './img/open_file_icon.png', label: 'Open', href: `home.html?folderId=${doc.id}` },
             { icon: './img/download_icon.png', label: 'Download', href: '#' },
@@ -170,7 +156,6 @@ async function loadFolders(parentId) {
             li.appendChild(a);
             dropdownMenu.appendChild(li);
 
-            // Attach click event for delete action
             if (action.label === 'Delete') {
                 a.addEventListener('click', async (event) => {
                     event.preventDefault(); // Prevent default link behavior
@@ -185,18 +170,14 @@ async function loadFolders(parentId) {
             }
         });
 
-        // Append dropdown button and menu
         dropdownDiv.appendChild(dropdownButton);
         dropdownDiv.appendChild(dropdownMenu);
 
-        // Append folder link and dropdown to folder-tile div
         folderTileDiv.appendChild(folderLink);
         folderTileDiv.appendChild(dropdownDiv);
 
-        // Append the folder-tile div to the column div
         colDiv.appendChild(folderTileDiv);
 
-        // Append the column div to the folder list
         foldersList.appendChild(colDiv);
     });
     hideLoader();
@@ -212,54 +193,45 @@ document.getElementById('createFolderBtn').addEventListener('click', async () =>
         return;
     }
 
-    // Close the modal
     const modalElement = bootstrap.Modal.getInstance(document.getElementById('newFolderModal'));
-    modalElement.hide(); // Close the modal
+    modalElement.hide();
 
-    // Show the loader
     showLoader();
 
     try {
-        // Add the new folder to Firestore
         await addDoc(collection(db, `assets/${userId}/folders`), {
             folderName: folderName,
-            parentFolderId: folderId, // Use the folderId from the URL
+            parentFolderId: folderId,
             createdAt: new Date(),
         });
 
-        document.getElementById('status').textContent = `Folder '${folderName}' created successfully!`;
         document.getElementById('newFolderName').value = ""; // Clear input
 
-        // Refresh the folder list
         await loadFolders(folderId);
 
-        // Hide the loader after the folder is created
         hideLoader();
     } catch (e) {
         console.error("Error creating folder: ", e);
         document.getElementById('status').textContent = "Error creating folder.";
         
-        // Hide the loader in case of error
         hideLoader();
     }
 });
 
 async function updateFolderTitleIndicator(folderId) {
     const folderTitleIndicator = document.getElementById('folderTitleIndicator');
-    folderTitleIndicator.innerHTML = ''; // Clear previous content
+    folderTitleIndicator.innerHTML = '';
 
-    // Create and append root folder link
     const rootLink = document.createElement('a');
-    rootLink.href = `home.html?folderId=root-${userId}`; // Link to the user's root folder
+    rootLink.href = `home.html?folderId=root-${userId}`;
     rootLink.className = 'rounded-pill folder-locator';
 
     const rootIcon = document.createElement('i');
-    rootIcon.className = 'fa-solid fa-folder-tree'; // Root icon
+    rootIcon.className = 'fa-solid fa-folder-tree';
     rootLink.appendChild(rootIcon);
     
     folderTitleIndicator.appendChild(rootLink);
 
-    // Fetch folder hierarchy
     const folderRef = doc(db, `assets/${userId}/folders`, folderId);
     const folderDoc = await getDoc(folderRef);
 
@@ -270,14 +242,13 @@ async function updateFolderTitleIndicator(folderId) {
     let currentFolderId = folderId;
     let parentFolderId = folderDoc.data().parentFolderId;
 
-    // Create parent folder chevron link
     if (parentFolderId) {
         const chevronLink = document.createElement('a');
-        chevronLink.href = `home.html?folderId=${parentFolderId}`; // Link to the parent folder
+        chevronLink.href = `home.html?folderId=${parentFolderId}`; 
         chevronLink.className = 'd-flex px-3 rounded-pill align-items-center fs-small button folder-locator';
         
         const chevronIcon = document.createElement('i');
-        chevronIcon.className = 'fa-solid fa-chevron-left'; // Chevron left icon
+        chevronIcon.className = 'fa-solid fa-chevron-left'; 
         chevronLink.appendChild(chevronIcon);
         
         folderTitleIndicator.appendChild(chevronLink);
@@ -286,25 +257,22 @@ async function updateFolderTitleIndicator(folderId) {
         const chevronLink = document.createElement('a');
         chevronLink.className = 'd-flex p-2 rounded-pill fs-small align-items-center';
         const chevronIcon = document.createElement('i');
-        chevronIcon.className = 'fa-solid fa-chevron-right'; // Chevron left icon
+        chevronIcon.className = 'fa-solid fa-chevron-right'; 
         chevronLink.appendChild(chevronIcon);
         folderTitleIndicator.appendChild(chevronLink)
     }
 
-    // Create current folder link
     const currentFolderLink = document.createElement('a');
     currentFolderLink.className = 'rounded-pill folder-locator';
 
-    // Set the current folder's name or "Home" if it's the root folder
     if (folderId === `root-${userId}`) {
-        currentFolderLink.textContent = 'Home'; // Show "Home" for the root folder
+        currentFolderLink.textContent = 'Home';
     } else {
-        currentFolderLink.textContent = folderDoc.data().folderName; // Use actual folder name
+        currentFolderLink.textContent = folderDoc.data().folderName;
     }
 
     folderTitleIndicator.appendChild(currentFolderLink);
 
-    // Show the folder title indicator
     folderTitleIndicator.classList.remove('d-none');
 }
 
@@ -312,19 +280,15 @@ async function updateFolderTitleIndicator(folderId) {
 async function deleteFolder(folderId) {
     const folderRef = doc(db, `assets/${userId}/folders`, folderId);
     
-    // Get child folders
     const childFoldersQuery = query(collection(db, `assets/${userId}/folders`), where("parentFolderId", "==", folderId));
     const childFoldersSnapshot = await getDocs(childFoldersQuery);
     
-    // Recursively delete child folders
     const deletePromises = childFoldersSnapshot.docs.map(doc => {
         return deleteFolder(doc.id); // Recursive call
     });
 
-    // Wait for all child folders to be deleted
     await Promise.all(deletePromises);
     
-    // Now delete the current folder
     await deleteDoc(folderRef);
 
     console.log(`Folder with ID ${folderId} deleted successfully.`);
@@ -332,20 +296,20 @@ async function deleteFolder(folderId) {
 
 // Example button click listener for delete action
 document.getElementById('deleteFolderBtn').addEventListener('click', async () => {
-    const folderId = getFolderIdFromUrl(); // Get the current folder ID
+    const folderId = getFolderIdFromUrl(); 
     const confirmDelete = confirm("Are you sure you want to delete this folder and all its contents? This action cannot be undone.");
     
     if (confirmDelete) {
-        showLoader(); // Show loader while processing
+        showLoader();
         try {
-            await deleteFolder(folderId); // Call the delete function
-            alert("Folder deleted successfully."); // Notify user
-            window.location.href = `home.html?folderId=root-${userId}`; // Redirect to root or desired page
+            await deleteFolder(folderId);
+            alert("Folder deleted successfully.");
+            window.location.href = `home.html?folderId=root-${userId}`;
         } catch (error) {
             console.error("Error deleting folder: ", error);
-            alert("Error deleting folder. Please try again."); // Notify user of error
+            alert("Error deleting folder. Please try again.");
         } finally {
-            hideLoader(); // Hide loader after processing
+            hideLoader();
         }
     }
 });
