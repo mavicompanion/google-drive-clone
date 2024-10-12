@@ -2,8 +2,6 @@
 
 A **Google Drive Clone** built using **HTML**, **CSS**, **JavaScript**, and **Firebase** for authentication and file storage. This application allows users to securely log in, upload files, create folders, and manage their data just like Google Drive.
 
-![Google Drive Clone Banner](https://via.placeholder.com/1200x400.png?text=Google+Drive+Clone)
-
 ---
 
 ## Features
