@@ -66,15 +66,5 @@ const storage = getStorage(app);
 
 git clone https://github.com/yourusername/google-drive-clone.git
 
-# Project Structure
-
-📂 Google-Drive-Clone
- ├── 📁 assets           # Static assets like images and icons
- ├── 📁 css              # Stylesheets
- ├── 📁 js               # JavaScript files
- ├── 📄 firebase.js      # Firebase configuration and initialization
- ├── 📄 index.html       # Main page for authentication
- ├── 📄 dashboard.html   # Dashboard for file management
- ├── 📄 README.md        # Project documentation
 
 
