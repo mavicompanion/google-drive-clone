@@ -45,6 +45,7 @@ window.addEventListener('load', hideLoader);
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         userId = user.uid;
+
         const folderId = getFolderIdFromUrl();
 
         if (!folderId || folderId === 'null') {
@@ -63,9 +64,10 @@ onAuthStateChanged(auth, async (user) => {
         showLoader();
         await loadFiles(folderId);
         hideLoader();
+
         window.currentFolderId = folderId;
     } else {
-        window.location.href = 'index.html';
+        window.location.href = 'login.html';
     }
 });
 
@@ -79,6 +81,7 @@ document.getElementById('fileInput').addEventListener('change', async (event) =>
     if (!file) return;
 
     const folderId = window.currentFolderId;
+
     showLoader();
 
     try {
@@ -102,6 +105,7 @@ document.getElementById('fileInput').addEventListener('change', async (event) =>
         };
 
         await updateMetadata(fileRef, metadata);
+
         const fileUrl = await getDownloadURL(fileRef);
 
         await updateDoc(docRef, {
@@ -127,6 +131,8 @@ async function deleteFile(uniqueFileId) {
         const q = query(filesRef, where("uniqueFileId", "==", uniqueFileId));
         const querySnapshot = await getDocs(q);
 
+        console.log(`Querying Firestore for uniqueFileId: ${uniqueFileId}`);
+
         if (querySnapshot.empty) {
             alert("File not found.");
             console.error("No documents found with uniqueFileId:", uniqueFileId);
@@ -139,8 +145,13 @@ async function deleteFile(uniqueFileId) {
         
         const fileRef = ref(storage, `assets/${userId}/${fileData.folderId}/files/${fileId}`);
 
+        console.log(`Attempting to delete file with ID: ${fileId} and uniqueFileId: ${uniqueFileId}`);
+
         await deleteObject(fileRef);
+        console.log("File deleted from storage successfully.");
+
         await deleteDoc(doc(db, `assets/${userId}/files`, fileId));
+        console.log("File deleted from Firestore successfully.");
 
         await loadFiles(window.currentFolderId);
     } catch (error) {
@@ -155,6 +166,8 @@ async function loadFiles(folderId) {
     const fileListContainer = document.getElementById('fileList');
     fileListContainer.innerHTML = '';
 
+    console.log("Loading files for folderId:", folderId);
+
     try {
         const filesRef = collection(db, `assets/${userId}/files`);
         const q = query(filesRef, where("folderId", "==", folderId));
@@ -168,6 +181,7 @@ async function loadFiles(folderId) {
         querySnapshot.forEach((doc) => {
             const fileData = doc.data();
             const fileId = doc.id;
+            console.log("File data:", fileData);
             const fileUrl = doc.fileUrl;
 
             const fileTile = document.createElement('div');
@@ -196,7 +210,7 @@ async function loadFiles(folderId) {
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item fw-light py-1" style="font-size: 15px;" href="#" onclick="deleteFile('${fileId}')">
+                                <a class="dropdown-item text-danger fw-light py-1" style="font-size: 15px;" href="#" onclick="deleteFile('${fileId}')">
                                     <img src="./img/delete_icon.png" style="width: 18px;" class="me-1 ms-0" alt="">
                                     Delete
                                 </a>
