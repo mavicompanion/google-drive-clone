@@ -84,7 +84,7 @@ onAuthStateChanged(auth, async (user) => {
         window.currentFolderId = folderId; // Store current folderId globally
     } else {
         // User is signed out, redirect to login page
-        window.location.href = 'login.html';
+        window.location.href = 'index.html';
     }
 });
 
