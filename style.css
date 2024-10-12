@@ -412,6 +412,9 @@ img {
 
 @media (max-width:920px)
 {
+  #folderTitleIndicator{
+    display: none;
+  }
   .folder-title-p{
     text-wrap:nowrap;
     max-width:10ch;
