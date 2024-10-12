@@ -10,7 +10,7 @@ const firebaseConfig = {
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { getFirestore, collection, query, where, getDocs, addDoc, doc, getDoc, deleteDoc} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs, addDoc, doc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
 
 const app = initializeApp(firebaseConfig);
@@ -82,7 +82,6 @@ async function loadFolders(parentId) {
 
     querySnapshot.forEach((doc) => {
         const folderData = doc.data();
-        
         const colDiv = document.createElement('div');
         colDiv.classList.add('col-10', 'col-md-4', 'col-lg-3', 'mt-2');
 
@@ -92,7 +91,7 @@ async function loadFolders(parentId) {
         const folderLink = document.createElement('a');
         folderLink.classList.add('folder-icon');
         folderLink.href = `home.html?folderId=${doc.id}`;
-        
+
         const folderIcon = document.createElement('i');
         folderIcon.classList.add('fas', 'fa-folder');
 
@@ -161,6 +160,7 @@ async function loadFolders(parentId) {
 
         dropdownDiv.appendChild(dropdownButton);
         dropdownDiv.appendChild(dropdownMenu);
+
         folderTileDiv.appendChild(folderLink);
         folderTileDiv.appendChild(dropdownDiv);
         colDiv.appendChild(folderTileDiv);
@@ -191,6 +191,7 @@ document.getElementById('createFolderBtn').addEventListener('click', async () =>
 
         document.getElementById('status').textContent = `Folder '${folderName}' created successfully!`;
         document.getElementById('newFolderName').value = "";
+
         await loadFolders(folderId);
         hideLoader();
     } catch (e) {
@@ -238,49 +239,72 @@ async function updateFolderTitleIndicator(folderId) {
         const chevronLink = document.createElement('a');
         chevronLink.className = 'd-flex p-2 rounded-pill fs-small align-items-center';
         const chevronIcon = document.createElement('i');
-        chevronIcon.className = 'fa-solid fa-chevron-left';
+        chevronIcon.className = 'fa-solid fa-folder';
         chevronLink.appendChild(chevronIcon);
         folderTitleIndicator.appendChild(chevronLink);
     }
 
+    let foldersChain = [];
+    
     while (parentFolderId) {
         const parentFolderRef = doc(db, `assets/${userId}/folders`, parentFolderId);
         const parentFolderDoc = await getDoc(parentFolderRef);
-
+        
         if (parentFolderDoc.exists()) {
-            const folderData = parentFolderDoc.data();
-            const folderLink = document.createElement('a');
-            folderLink.href = `home.html?folderId=${parentFolderId}`;
-            folderLink.className = 'rounded-pill folder-locator';
-            folderLink.textContent = folderData.folderName;
-            folderTitleIndicator.appendChild(folderLink);
-            parentFolderId = folderData.parentFolderId;
+            foldersChain.push(parentFolderDoc.data().folderName);
+            parentFolderId = parentFolderDoc.data().parentFolderId;
         } else {
             break;
         }
     }
 
-    const currentFolderLink = document.createElement('span');
-    currentFolderLink.className = 'current-folder';
+    foldersChain.reverse().forEach(folderName => {
+        const folderLink = document.createElement('a');
+        folderLink.className = 'folder-title-p d-flex p-2 rounded-pill align-items-center fs-small';
+        folderLink.textContent = folderName;
+        folderTitleIndicator.appendChild(folderLink);
+    });
+
+    const currentFolderLink = document.createElement('a');
+    currentFolderLink.className = 'current-folder fs-small text-bold';
     currentFolderLink.textContent = folderDoc.data().folderName;
     folderTitleIndicator.appendChild(currentFolderLink);
 }
 
 async function deleteFolder(folderId) {
     showLoader();
+    
     const folderRef = doc(db, `assets/${userId}/folders`, folderId);
-    const filesRef = collection(db, `assets/${userId}/files`);
-    const filesQuery = query(filesRef, where("folderId", "==", folderId));
+    await deleteDoc(folderRef);
+    
+    const q = query(collection(db, `assets/${userId}/folders`), where("parentFolderId", "==", folderId));
+    const querySnapshot = await getDocs(q);
+    
+    querySnapshot.forEach(async (doc) => {
+        await deleteFolder(doc.id);
+    });
 
-    const filesSnapshot = await getDocs(filesQuery);
+    const qFiles = query(collection(db, `assets/${userId}/files`), where("folderId", "==", folderId));
+    const querySnapshotFiles = await getDocs(qFiles);
+    
+    querySnapshotFiles.forEach(async (fileDoc) => {
+        await deleteFile(fileDoc.id);
+    });
 
-    if (!filesSnapshot.empty) {
-        filesSnapshot.forEach(async (fileDoc) => {
-            const fileRef = doc(db, `assets/${userId}/files`, fileDoc.id);
-            await deleteDoc(fileRef);
-        });
+    hideLoader();
+}
+
+async function deleteFile(fileId) {
+    showLoader();
+
+    const fileRef = doc(db, `assets/${userId}/files`, fileId);
+    const fileDoc = await getDoc(fileRef);
+
+    if (fileDoc.exists()) {
+        const storageRef = ref(storage, `assets/${userId}/files/${fileDoc.data().fileName}`);
+        await deleteObject(storageRef);
+        await deleteDoc(fileRef);
     }
 
-    await deleteDoc(folderRef);
     hideLoader();
 }
