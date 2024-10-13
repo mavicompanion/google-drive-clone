@@ -9,9 +9,9 @@ const firebaseConfig = {
 };
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { getFirestore, collection, query, where, getDocs, addDoc, doc, getDoc, deleteDoc,updateDoc, serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { getStorage, uploadBytes, getDownloadURL, deleteObject, updateMetadata} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
+import { getAuth, onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, collection, query, where, getDocs, addDoc, doc,getDoc, deleteDoc,updateDoc, serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { ref,deleteObject,getStorage, uploadBytes, getDownloadURL, updateMetadata} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -67,6 +67,7 @@ onAuthStateChanged(auth, async (user) => {
         await updateFolderTitleIndicator(folderId);
         await loadFiles(folderId);
         hideLoader();
+        window.currentFolderId = folderId;
     } else {
         window.location.href = 'index.html';
     }
@@ -78,12 +79,20 @@ document.getElementById('uploadFileButton').addEventListener('click', (event) =>
     document.getElementById('fileInput').click(); 
 });
 
-// Function to handle file selection and upload
 document.getElementById('fileInput').addEventListener('change', async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
     const folderId = window.currentFolderId;
+
+    // Debugging step to check if folderId is valid
+    console.log("Current folderId:", folderId);
+
+    if (!folderId) {
+        console.error("Error: folderId is undefined");
+        alert("Folder ID is not defined. Please reload the page and try again.");
+        return;
+    }
 
     showLoader();
 
@@ -160,7 +169,7 @@ async function deleteFile(uniqueFileId) {
         await deleteDoc(doc(db, `assets/${userId}/files`, fileId));
         console.log("File deleted from Firestore successfully.");
 
-        await loadFiles(window.currentFolderId);
+        await loadFiles(fileData.folderId);
     } catch (error) {
         console.error("Error deleting file: ", error);
         alert("Error deleting file. Please try again.");
@@ -168,8 +177,6 @@ async function deleteFile(uniqueFileId) {
         hideLoader();
     }
 }
-
-
 
 
 async function loadFiles(folderId) {
@@ -521,22 +528,30 @@ async function deleteFolder(folderId) {
     console.log(`Folder with ID ${folderId} deleted successfully.`);
 }
 
-// Example button click listener for delete action
-document.getElementById('deleteFolderBtn').addEventListener('click', async () => {
-    const folderId = getFolderIdFromUrl(); 
-    const confirmDelete = confirm("Are you sure you want to delete this folder and all its contents? This action cannot be undone.");
-    
-    if (confirmDelete) {
-        showLoader();
-        try {
-            await deleteFolder(folderId);
-            alert("Folder deleted successfully.");
-            window.location.href = `home.html?folderId=root-${userId}`;
-        } catch (error) {
-            console.error("Error deleting folder: ", error);
-            alert("Error deleting folder. Please try again.");
-        } finally {
-            hideLoader();
-        }
+document.addEventListener("DOMContentLoaded", () => {
+    const deleteFolderBtn = document.getElementById('deleteFolderBtn');
+
+    if (deleteFolderBtn) {
+        deleteFolderBtn.addEventListener('click', async () => {
+            const folderId = getFolderIdFromUrl(); 
+            const confirmDelete = confirm("Are you sure you want to delete this folder and all its contents? This action cannot be undone.");
+            
+            if (confirmDelete) {
+                showLoader();
+                try {
+                    await deleteFolder(folderId);
+                    alert("Folder deleted successfully.");
+                    window.location.href = `home.html?folderId=root-${userId}`;
+                } catch (error) {
+                    console.error("Error deleting folder: ", error);
+                    alert("Error deleting folder. Please try again.");
+                } finally {
+                    hideLoader();
+                }
+            }
+        });
+    } else {
+        console.error('deleteFolderBtn element not found.');
     }
 });
+
