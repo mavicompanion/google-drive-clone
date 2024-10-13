@@ -227,7 +227,7 @@ async function loadFiles(folderId) {
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item text-danger fw-light py-1" style="font-size: 15px;" href="#" onclick="deleteFile('${fileId}')">
+                                <a class="dropdown-item fw-light py-1" style="font-size: 15px;" href="#" onclick="deleteFile('${fileId}')">
                                     <img src="./img/delete_icon.png" style="width: 18px;" class="me-1 ms-0" alt="">
                                     Delete
                                 </a>
