@@ -67,7 +67,7 @@ const storage = getStorage(app);
 git clone https://github.com/yourusername/google-drive-clone.git
 
 
-# Snapshots of Project UI
+### Snapshots of Project UI
 
 ![Alt text](img/gdrive-clone-login.png)
 ![Alt text](img/gdrive-clone-home.png)
